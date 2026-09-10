@@ -1,13 +1,8 @@
-const { diff } = require('util')
 
-const http = require( 'http' ),
-      fs   = require( 'fs' ),
-      // IMPORTANT: you must run `npm install` in the directory for this assignment
-      // to install the mime library if you're testing this on your local machine.
-      // On Render, make sure `npm install` is your build command.
-      mime = require( 'mime' ),
-      dir  = 'public/',
-      port = 3000
+
+// await client.connect();
+
+require('dotenv').config()
 
 let appdata = [
   { 'recipeName': 'Basic Pan-Fried Chicken', 
@@ -22,99 +17,197 @@ let appdata = [
       'Season other side with onion powder and garlic salt', 'Cook on high for 5 minutes on each side',
       'As the 2nd side cookies, add a slice of cheese'],
     'cookTime': 15,
-    'difficulty': 'moderate'}
-  ]
+    'difficulty': 'moderate'}]
 
-const server = http.createServer( function( request,response ) {
-  if( request.method === 'GET' ) {
-    handleGet( request, response )    
-  }else if( request.method === 'POST' ){
-    handlePost( request, response ) 
-  }
-})
+const express = require('express'),
+       { MongoClient, ObjectId } = require('mongodb'),
+      app = express()
 
-const handleGet = function( request, response ) {
-  const filename = dir + request.url.slice( 1 ) 
+app.use(express.static('public'))
+app.use(express.json())
 
-  if( request.url === '/' ) {
-    sendFile( response, 'public/index.html' )
-  }else if(request.url === '/data'){
-    console.log(`Getting appdata starting with: ${appdata[0]}`)
-    response.writeHead( 200, "OK", {'Content-Type': 'text/plain' })
-    response.end(JSON.stringify(appdata))
-  }
-  else{
-    sendFile( response, filename )
-  }
-}
+const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.HOST}`
+console.log('uri :', uri)
+const client = new MongoClient(uri)
 
-const handlePost = function( request, response ) {
-  let dataString = ''
 
-  request.on( 'data', function( data ) {
-      dataString += data 
-  })
 
-  request.on( 'end', function() {
-    let newData = JSON.parse( dataString )
-    console.log(newData)
-    
-    if( typeof newData === 'string'){
-      appdata = appdata.filter(item => item.recipeName !== newData)
-    }else{
-      // get the number of ingredients and steps as well as cook time to determine complexity
-      const numIngredients = newData['ingredients'].length
-      const numStep = newData['ingredients'].length
-      const cookTime = newData['cookTime']
+// app.post('/submit', (req, res) => {
+//   console.log(req.body)
+//   const numIngredients = req.body.ingredients.length,
+//         numStep = req.body.instructions.length,
+//         cookTime = req.body.cookTime
 
-      //moderate range is around 20-30 min 3-5 ingredients 3-5 steps
-      //want 25x+4y+4z  = 1 w/ 40 20 40 split
-      //25x = 0.4
-      // 4y = 0.2
-      // 4z = 0.4
-      let diffSum = 0.016*cookTime+ 0.05*numIngredients+0.1*numStep
-      let diff = ''
-      if (diffSum < 1){
-        diff = 'easy'
+//   let diffSum = 0.016*cookTime+ 0.05*numIngredients+0.1*numStep
+//   if (diffSum < 1){
+//     req.body.diff = 'easy'
+//     }
+//   else if (diffSum > 1.5){
+//     req.body.diff = 'hard'
+//   }
+//   else{
+//     req.body.diff = 'moderate'
+//   }  
+//   appdata.push(req.body)
+//   res.writeHead(200, {'Content-Type' : 'application/json'})
+//   res.end(JSON.stringify(appdata))
+// })
+
+let collection = null
+
+async function run() {
+  await client.connect()
+  collection = await client.db("cookbook").collection("recipes")
+
+  //middleware to calculate difficulty before data is added or updated in database
+  const deriveDifficulty = (req, res, next) => {
+    const numIngredients = req.body.ingredients.length,
+        numStep = req.body.instructions.length,
+        cookTime = req.body.cookTime
+
+    let diffSum = 0.016*cookTime+ 0.05*numIngredients+0.1*numStep
+    if (diffSum < 1){
+      req.body.difficulty = 'easy'
       }
-      else if (diffSum > 1.5){
-        diff = 'hard'
-      }
-      else{
-        diff = 'moderate'
-      }  
-    
-    newData.difficulty = diff
-    appdata.push( newData )
+    else if (diffSum > 1.5){
+      req.body.difficulty = 'hard'
     }
+    else{
+      req.body.difficulty = 'moderate'
+    }  
+    next()
+  }
 
-    response.writeHead( 200, "OK", {'Content-Type': 'text/plain' })
+  //middleware to check connection
+  app.use( (req, res, next) => {
+    if(collection !== null){
+      next()
+    }
+    else{
+      res.status(503).send
+    }
+  })
 
-    // change this to incorporate data
-    response.end(JSON.stringify(appdata))
+  // route to get all docs
+  app.get("/docs", async (req, res) => {
+    const docs = await collection.find({}).toArray()
+    res.json( docs )
+  })
+
+  //add item to DB
+  app.post( '/add', deriveDifficulty,  async (req,res) => {
+    const result = await collection.insertOne( req.body )
+    res.json( result )
+  })
+
+  //remove item from DB 
+  // where req.body is of form like {_id:5d91fb30f3f81b282d7be0dd } for 
+  app.post( '/remove', async (req,res) => {
+    const result = await collection.deleteOne({ 
+      _id:new ObjectId( req.body._id ) })
+    res.json( result )
+  })
+
+  app.post( '/update', deriveDifficulty, async (req,res) => {
+    const result = await collection.updateOne(
+      { _id: new ObjectId( req.body._id ) },
+      { $set:{ recipeName : req.body.recipeName,
+              ingredients : res.body.ingredients,
+              instructions : res.body.instructions,
+              
+       } })
+
+    res.json( result )
   })
 }
 
-const sendFile = function( response, filename ) {
-   const type = mime.getType( filename ) 
+run()
 
-   fs.readFile( filename, function( err, content ) {
+app.listen(3000 )
 
-     // if the error = null, then we've loaded the file successfully
-     if( err === null ) {
 
-       // status code: https://httpstatuses.com
-       response.writeHeader( 200, { 'Content-Type': type })
-       response.end( content )
+// const { diff } = require('util')
 
-     }else{
+// const http = require( 'http' ),
+//       fs   = require( 'fs' ),
+//       // IMPORTANT: you must run `npm install` in the directory for this assignment
+//       // to install the mime library if you're testing this on your local machine.
+//       // On Render, make sure `npm install` is your build command.
+//       mime = require( 'mime' ),
+//       dir  = 'public/',
+//       port = 3000
 
-       // file not found, error code 404
-       response.writeHeader( 404 )
-       response.end( '404 Error: File Not Found' )
+// 
 
-     }
-   })
-}
+// const server = http.createServer( function( request,response ) {
+//   if( request.method === 'GET' ) {
+//     handleGet( request, response )    
+//   }else if( request.method === 'POST' ){
+//     handlePost( request, response ) 
+//   }
+// })
 
-server.listen( process.env.PORT || port )
+// const handleGet = function( request, response ) {
+//   const filename = dir + request.url.slice( 1 ) 
+
+//   if( request.url === '/' ) {
+//     sendFile( response, 'public/index.html' )
+//   }else if(request.url === '/data'){
+//     console.log(`Getting appdata starting with: ${appdata[0]}`)
+//     response.writeHead( 200, "OK", {'Content-Type': 'text/plain' })
+//     response.end(JSON.stringify(appdata))
+//   }
+//   else{
+//     sendFile( response, filename )
+//   }
+// }
+
+// const handlePost = function( request, response ) {
+//   let dataString = ''
+
+//   request.on( 'data', function( data ) {
+//       dataString += data 
+//   })
+
+//   request.on( 'end', function() {
+//     let newData = JSON.parse( dataString )
+//     console.log(newData)
+    
+//     if( typeof newData === 'string'){
+//       appdata = appdata.filter(item => item.recipeName !== newData)
+//     }else{
+//       // get the number of ingredients and steps as well as cook time to determine complexity
+//       
+    
+//     newData.difficulty = diff
+//     appdata.push( newData )
+//     }
+
+//     response.writeHead( 200, "OK", {'Content-Type': 'text/plain' })
+
+//     // change this to incorporate data
+//     response.end(JSON.stringify(appdata))
+//   })
+// }
+
+// const sendFile = function( response, filename ) {
+//    const type = mime.getType( filename ) 
+
+//    fs.readFile( filename, function( err, content ) {
+
+//      // if the error = null, then we've loaded the file successfully
+//      if( err === null ) {
+
+//        // status code: https://httpstatuses.com
+//        response.writeHeader( 200, { 'Content-Type': type })
+//        response.end( content )
+
+//      }else{
+
+//        // file not found, error code 404
+//        response.writeHeader( 404 )
+//        response.end( '404 Error: File Not Found' )
+
+//      }
+//    })
+// }
