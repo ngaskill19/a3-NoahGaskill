@@ -25,11 +25,20 @@ h1{
   text-shadow: 5px 5px var(--dark-border), 4px 4px var(--dark-border), 3px 3px var(--dark-border);
 }
 
+.login{
+  width:90%;
+}
 main{
   width:80%;
   margin: 0 auto;
   display: flex;
   align-items: space-between;
+}
+
+.alert-banner{
+  display: none;
+  width:90%;
+  margin:auto;
 }
 
 #form{
