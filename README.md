@@ -4,6 +4,8 @@ Link: https://a3-noahgaskill.onrender.com/
 
 Cookbook is a simple recipe manager site that allows users to store and edit their recipes. Users may create an account and see all their uploaded recipes. They may change any of the details, like the name, cook time, ingredients, or steps, and they can also delete a recipe entirely if they so choose.
 
+To use, you may create your own account. Or you can use the sample account noahggg with the password 123, who already has a recipe stored.
+
 ### Challenges: 
 The main challenge I faced in building this application was the edit feature. I wanted to reuse the recipe creation form but I had to make a lot of changes for that to work. I added an edit button next to the delete one, which then grabs and prefills the form with the recipe's details. I also pass the object id (stored in the dataset attribute of the recipe table's html) to the form to send it to the update route.  I faced issues with the table not updating after the form submitted, so I had to make the buildTable function return a table, and use the javascript replaceWith() function to replace the old table with the new one, and then all the form details were reset. I also faced an odd issue where req.body was sent properly but the server was reading the fields as undefined. I'm not even sure how but it ended up fixing itself eventually.
 
