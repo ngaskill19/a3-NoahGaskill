@@ -96,20 +96,26 @@ Sample Readme (delete the above when you're ready to submit, and modify the belo
 
 ## Your Web Application Title
 
-A link to your project running on render.
+Link: https://a3-noahgaskill.onrender.com/
 
 Include a very brief summary of your project here. Images are encouraged, along with concise, high-level text. Be sure to include:
+Cookbook is a simple recipe manager site that allows users to store and edit their recipes. Users may create an account and see all their uploaded recipes 
 
-- the goal of the application
-- challenges you faced in realizing the application
-- what authentication strategy you chose to use and why (choosing one because it seemed the easiest to implement is perfectly acceptable)
-- what CSS framework you used and why
-  - include any modifications to the CSS framework you made via custom CSS you authored
+### Challenges: 
+The main challenge I faced in building this application was the edit feature. I wanted to reuse the recipe creation form but I had to make a lot of changes for that to work. I added an edit button next to the delete one, which then grabs and prefills the form with the recipe's details. I also pass the object id (stored in the dataset attribute of the recipe table's html) to the form to send it to the update route.  I faced issues with the table not updating after the form submitted, so I had to make the buildTable function return a table, and use the javascript replaceWith() function to replace the old table with the new one, and then all the form details were reset. I also faced an odd issue where req.body was sent properly but the server was reading the fields as undefined. I'm not even sure how but it ended up fixing itself eventually.
+
+Additionally, it was a challenge for me to give up the design I made and find a suitable framework. None really had the look I was going for. I wanted something vintage and whimsical, but most were very professional looking. Retro themes wouldn't fit, some paper ones I found were too cartoony, and others old-styled ones were too formal. 
+
+### Authentication: 
+I chose the basic username and password authentication. Switching the server to express, connecting to MongoDB, and adding the editing feature took longer than I expected, so I chose to go with the less time-consuming method. I considered making a proper registration system alongside the login but unfortunately did not have the time to implement such a feature.
+
+### CSS: 
+I chose BeerCSS, as I liked the brown color scheme it included. I felt the colors would be the best way to compromise and get a cozy/vintage feel despite the more professional design. I also liked how it didn't feel too minimalist either. I had familiarity with class-based frameworks from using Bootstrap in CS3733 last year, so it wasn't too difficult to work with, and I liked having more control over the styling.
+- include any modifications to the CSS framework you made via custom CSS you authored
 
 ## Technical Achievements
 - **Tech Achievement 1**: I used OAuth authentication via the GitHub strategy
 - **Tech Achievement 1**: I used the following additional middleware:
-  - connect-flash: I used this to display a temporary message on successful logins and recipe submissions
 
 ### Design/Evaluation Achievements
 - **Design Achievement 1**: I followed the following tips from the W3C Web Accessibility Initiative...

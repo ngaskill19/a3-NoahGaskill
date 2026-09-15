@@ -3,6 +3,7 @@ require('dotenv').config()
 const express = require('express'),
       { MongoClient, ObjectId } = require('mongodb'),
       cookie = require('cookie-session'),
+      bcrypt = require('bcryptjs')
       app = express()
 
 app.use(express.static('public'))
@@ -54,15 +55,7 @@ async function run() {
       res.status(503).send
     }
   })
-  // middleware that always sends unauthenicaetd users to the login page
-  app.use( function( req,res,next) {
-    console.log(req.session.login)
-    if( req.session.login === true )
-      next()
-    else
-      res.sendFile( __dirname + '/public/index.html' )
-  })
-
+  
   app.post( '/login', async (req,res)=> {
     // express.urlencoded will put your key value pairs 
     // into an object, where the key is the name of each
@@ -75,12 +68,15 @@ async function run() {
     const existing_user = await collection.findOne({ username: { $eq: username } })
     // if username is not in db, create that user
     if(!existing_user){
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(password, salt)
+      req.body.password = hashedPassword
       const result = await collection.insertOne( req.body )
       req.session.user = username
       res.redirect( 'main.html' )
     }
     //otherwise check if password matches stored password
-    else if( password === existing_user.password ) {
+    else if( bcrypt.compare(password, existing_user.password) ){
       // define a variable that we can check in other middleware
       // the session object is added to our requests by the cookie-session middleware
       req.session.login = true
@@ -92,6 +88,15 @@ async function run() {
       // password incorrect, redirect back to login page
       res.sendFile( __dirname + '/public/index.html' )
     }
+  })
+
+  // middleware that always sends unauthenicaetd users to the login page
+  app.use( function( req,res,next) {
+    console.log(req.session.login)
+    if( req.session.login === true )
+      next()
+    else
+      res.sendFile( __dirname + '/public/index.html' )
   })
 
   // route to get all docs

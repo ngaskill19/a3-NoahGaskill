@@ -4,45 +4,68 @@
     <title>Cookbook - CS4241 Assignment 3</title>
     <meta charset='utf-8'>
     <script src='js/main.js'></script>
+    <!--beer.css-->
+    <link href="https://cdn.jsdelivr.net/npm/beercss@5.0.3/dist/cdn/beer.min.css" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@5.0.3/dist/cdn/beer.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.4/dist/cdn/material-dynamic-colors.min.js"></script>
+    <!--my overrides-->
     <link rel='stylesheet' href='css/main.css' >
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?Didact+Gothic&family=Limelight&display=swap" rel="stylesheet">
-    
+
     <!-- get rid of favicon error -->
     <link rel='icon' href='data:;base64,iVBORw0KGgo='>
+    <meta name='description' content='A simplistic recipe manager where you can store, edit, and delete your recipes.'>
   </head>
-  <body>
-    <h1>Cookbook</h1>
+  <body class = "responsive light">
+    <header class = "top-margin small-blur medium-width round center">
+      <nav>
+          <h1 class = 'max center-align'>Cookbook</h1>
+      </nav>
+    </header>
     <main>
-      
-      <form class='box' id='form'>
-        <h2>Add Recipe</h2>
-        <div>
-          <label for='recipe-name'><strong>Recipe Name:</strong></label>
-          <input type='text' id='recipe-name' value='' minlength = 1>
-        </div>
-        <div>
-          <label for='ingredients'><strong>Ingredients:</strong></label>
-          <textarea id='ingredients' minlength = 1 placeholder='Enter an ingredient and press the button to add it'></textarea>
-          <button type='button' class='add'>Add ingredient</button>
-          <ul id='ingredients-list'></ul>
-        </div>
-        <div>
-          <label for='instructions'><strong>Instructions: </strong></label>
-          <textarea id='instructions' minlength = 1 placeholder='Enter a step and press the button to add it'></textarea>
-          <button type='button' class='add' >Add step</button>
-          <ol id='instructions-list'></ol>
-        </div>
-        <div>
-          <label for='cook-time'><strong>Cook time:</strong> </label>
-          <input type='number' id='cook-time' value='0' min = 1 >
-        </div>
-        <button id="submit" data-action="submit">Submit Recipe</button>
-      </form>
-      <section class='box' id='recipes'>
-        <h2 id = 'all-recipes'>All Recipes</h2>
-      </section>
+      <div class="row center-align top-align">
+        <article class="padding auto-height container-card medium-width">
+          <form id='form'>
+            <h2>Add Recipe</h3>
+            <div class="field label">
+              <input type='text' id='recipe-name' value='' minlength = 1>
+              <label for='recipe-name'><strong>Recipe Name:</strong></label>
+            </div>
+            <div class="field label">
+              <input type='number' id='cook-time' value='0' min = 1 >
+              <label for='cook-time'><strong>Cook time:</strong> </label>
+            </div>
+            <div class="field padding">
+              <label for='ingredients'><strong>Ingredients:</strong></label>
+              <textarea id='ingredients' minlength = 1 placeholder='Enter an ingredient'></textarea>
+              <output>Enter ingredients one by one</output>
+            </div>
+            <div>
+              <button type='button' class='tertiary add'>Add ingredient</button>
+            </div>
+            <div class="padding">
+              <ul id='ingredients-list' class="list border"></ul>
+            </div>
+            <div class="field padding">
+              <label for='instructions'><strong>Instructions: </strong></label>
+              <textarea id='instructions' minlength = 1 placeholder='Enter a step'></textarea>
+              <output>Enter ingredients one by one</output>
+            </div>
+            <button type='button' class='tertiary add' >Add step</button>
+            <div class="padding">
+              <ol id='instructions-list' class="list border"></ol>
+            </div>
+            <div class="right-align">
+              <button id="submit" class = 'submit' data-action="submit">Submit Recipe</button>
+            </div>
+          </form>
+        </article>
+        <article id='recipes' class="container-card large-width auto-height top">
+          <h2 id = 'all-recipes' class='padding'>All Recipes</h2>
+          <div class="center-align middle-algin" id = 'empty'>
+            No recipes yet...
+          </div>
+        </article>
+      </div>
     </main>
   </body>
 </html>

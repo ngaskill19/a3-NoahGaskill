@@ -8,12 +8,14 @@
     "build": "npm install"
   },
   "dependencies": {
-    "connect-flash": "^0.1.1",
+    "@material/material-color-utilities": "^0.4.0",
+    "bcryptjs": "^3.0.3",
     "cookie-session": "^2.1.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mime": "^2.4.4",
-    "mongodb": "^7.6.0"
+    "mongodb": "^7.6.0",
+    "sakura.css": "^1.5.1"
   },
   "engines": {
     "node": "24.x"
