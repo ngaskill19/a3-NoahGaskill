@@ -76,7 +76,7 @@ async function run() {
       res.redirect( 'main.html' )
     }
     //otherwise check if password matches stored password
-    else if( bcrypt.compare(password, existing_user.password) ){
+    else if( await bcrypt.compare(password, existing_user.password) ){
       // define a variable that we can check in other middleware
       // the session object is added to our requests by the cookie-session middleware
       req.session.login = true
@@ -97,6 +97,15 @@ async function run() {
       next()
     else
       res.sendFile( __dirname + '/public/index.html' )
+  })
+
+  app.post( '/logout', async (req,res)=> {
+    // express.urlencoded will put your key value pairs 
+    // into an object, where the key is the name of each
+    // form field and the value is whatever the user entered
+    req.session.login = false
+    delete req.session.user
+    res.sendFile( __dirname + '/public/index.html' )
   })
 
   // route to get all docs
